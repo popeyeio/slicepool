@@ -8,19 +8,24 @@ import (
 
 var ErrInvalidParam = errors.New("invalid param")
 
-type Pool struct {
+type Pool interface {
+	Get(int) []interface{}
+	Put([]interface{})
+}
+
+type pool struct {
 	length    int
 	poolSizes []int
 	pools     []sync.Pool
 }
 
-var defaultPool *Pool
+var defaultPool Pool
 
 func init() {
 	defaultPool, _ = New(1<<1, 1<<20)
 }
 
-func New(minSize, maxSize int) (*Pool, error) {
+func New(minSize, maxSize int) (Pool, error) {
 	if minSize <= 0 || maxSize < minSize {
 		return nil, ErrInvalidParam
 	}
@@ -43,7 +48,7 @@ func New(minSize, maxSize int) (*Pool, error) {
 		}(poolSizes[i])
 	}
 
-	return &Pool{
+	return &pool{
 		length:    length,
 		poolSizes: poolSizes,
 		pools:     pools,
@@ -54,7 +59,7 @@ func Get(size int) []interface{} {
 	return defaultPool.Get(size)
 }
 
-func (p *Pool) Get(size int) []interface{} {
+func (p *pool) Get(size int) []interface{} {
 	if p.length <= 0 || size > p.poolSizes[p.length-1] {
 		return make([]interface{}, 0, size)
 	}
@@ -70,7 +75,7 @@ func Put(v []interface{}) {
 	defaultPool.Put(v)
 }
 
-func (p *Pool) Put(v []interface{}) {
+func (p *pool) Put(v []interface{}) {
 	size := cap(v)
 	if p.length <= 0 || size < p.poolSizes[0] {
 		return
