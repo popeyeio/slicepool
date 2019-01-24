@@ -22,7 +22,7 @@ type pool struct {
 var defaultPool Pool
 
 func init() {
-	defaultPool, _ = New(1<<1, 1<<20)
+	defaultPool, _ = New(1<<0, 1<<20)
 }
 
 func New(minSize, maxSize int) (Pool, error) {
@@ -60,7 +60,7 @@ func Get(size int) []interface{} {
 }
 
 func (p *pool) Get(size int) []interface{} {
-	if p.length <= 0 || size > p.poolSizes[p.length-1] {
+	if size > p.poolSizes[p.length-1] {
 		return make([]interface{}, 0, size)
 	}
 
@@ -77,7 +77,7 @@ func Put(v []interface{}) {
 
 func (p *pool) Put(v []interface{}) {
 	size := cap(v)
-	if p.length <= 0 || size < p.poolSizes[0] {
+	if size < p.poolSizes[0] {
 		return
 	}
 
