@@ -19,6 +19,8 @@ type pool struct {
 	pools     []sync.Pool
 }
 
+var _ Pool = (*pool)(nil)
+
 var defaultPool Pool
 
 func init() {
